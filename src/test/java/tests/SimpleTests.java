@@ -1,6 +1,7 @@
 package tests;
 
 import com.codeborne.selenide.Configuration;
+import com.codeborne.selenide.Selenide;
 import com.codeborne.selenide.logevents.SelenideLogger;
 import helpers.Attach;
 import io.qameta.allure.selenide.AllureSelenide;
@@ -24,6 +25,12 @@ public class SimpleTests {
     static void openPage() {
         Configuration.browserSize = "1920x1080";
         open("https://biocad.ru");
+
+            @BeforeEach
+    void preconditionBrowser() {
+        baseUrl = "https://biocad.ru";
+        browserSize = "1920x1080";
+    }
     }
 
      */
@@ -31,7 +38,6 @@ public class SimpleTests {
     public void beforeEach() {
         String browser = System.getProperty("browser", "chrome");
         String size = System.getProperty("size", "1920x1080");
-
 
         SelenideLogger.addListener("AllureSelenide", new AllureSelenide());
         Configuration.browserSize = size;
@@ -42,7 +48,6 @@ public class SimpleTests {
         capabilities.setCapability("enableVNC", true);
         capabilities.setCapability("enableVideo", true);
         Configuration.browserCapabilities = capabilities;
-
 
         Attach.attachAsText("Browser: ", browser);
         Attach.attachAsText("Size: ", size);
@@ -64,10 +69,8 @@ public class SimpleTests {
 
     /*
     @AfterEach
-    void closeBrowser() {
-        closeWebDriver();
-    }
-     */
+    void closeBrowser() { closeWebDriver();}
+    */
 
     @AfterAll
     public static void afterAll() {
@@ -142,4 +145,31 @@ public class SimpleTests {
         //$$(".ant-notification-bottomRight").find(text("Тра ля ля")).shouldBe(visible, Duration.ofSeconds(10)); //negative test
         //sleep(Long.parseLong("5000"));
         }
+
+    @Tag("siteTests")
+    @DisplayName("Проверка текстов на странице \"О компании\"")
+    @Test
+    void searshTextElement(){
+        Selenide.open("/we");
+        $(".logo").shouldHave(text("BIOCAD"));
+        $(byText("Улучшение и продление жизни людей"));
+        $(".title").shouldHave(text("Станьте частью нашей компании")); //h3
+        $("[href='https://career.biocad.ru/']").click(); //"Подробнее"
+        $(byText("Результаты нашего труда спасают жизни людей!")); //h2
+        $(By.linkText("Открытые вакансии")).isDisplayed();
+    }
+
+    //@Disabled ("Этот тест будет пропущен")
+    //NB: Тест зависим от наличия реальных данных на сайте
+    @Tag("siteTests")
+    @DisplayName("Запрос в строку поиска \"Вакансии\"")
+    @Test
+    void careerSearsh(){
+        Selenide.open("https://career.biocad.ru/vacancies/search");
+        $("#vacancy-search-name").setValue("Lead Automation Infrastructure Engineer").pressEnter();
+        $(".search-results-header-row").shouldHave(text("По вашему запросу найдено 1 вакансий:"));
+    }
+
 }
+
+
